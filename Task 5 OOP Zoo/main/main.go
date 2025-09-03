@@ -43,4 +43,5 @@ type ZooKeeper struct {
 
 func (z ZooKeeper) Feed(animal Animal) {
 	fmt.Printf("Смотритель зоопарка кормит %s. %s!\n", animal.GetName(), animal.MakeSound())
+	fmt.Println("животные")
 }

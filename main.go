@@ -1,42 +1,80 @@
 package main
 
 import (
-	"testing"
+	"errors"
+	"fmt"
+	"sort"
 )
 
-func TestGetUTFLength(t *testing.T) {
-	validInput := []byte{208, 159, 209, 128, 208, 184, 208, 178, 208, 181, 209, 130}
-	result, err := GetUTFLength(validInput)
-	if err != nil {
-		t.Errorf("Не ожидалась ошибка, но получилась: %v", err)
-	}
-	if result != 6 {
-		t.Errorf("Ожидалось 6, но получили %d", result)
-	}
-
-	invalidInput := []byte{0xff, 0xfe, 0xfd}
-	_, err = GetUTFLength(invalidInput)
-	if err == nil {
-		t.Errorf("Ожидалась ошибка, но ее не было")
-	}
+type Worker struct {
+	Name       string
+	Position   string
+	Salary     uint
+	Experience uint
 }
 
-// type Test struct {
-// 	in []byte
-// 	outOne string
-// 	outTwo string
+type Company struct {
+	Workers []Worker
+}
+
+type CompanyInterface interface {
+	AddWorkerInfo(name, position string, salary, experience uint) error
+	SortWorkers() ([]string, error)
+}
+
+var positionRank = map[string]int{
+	"директор":       5,
+	"зам. директора": 4,
+	"начальник цеха": 3,
+	"мастер":         2,
+	"рабочий":        1,
+}
+
+func (c *Company) AddWorkerInfo(name, position string, salary, experience uint) error {
+	if position != "директор" && position != "зам. директора" && position != "начальник цеха" && position != "мастер" && position != "рабочий" {
+		return errors.New("несуществующая должность")
+	}
+	c.Workers = append(c.Workers, Worker{name, position, salary, experience})
+	return nil
+
+}
+
+func (c *Company) SortWorkers([]string, error) {
+	sort.SliceStable(c.Workers, func(i, j int) bool {
+		incomeI := c.Workers[i].Salary * c.Workers[i].Experience
+		incomeJ := c.Workers[j].Salary * c.Workers[j].Experience
+		if incomeI != incomeJ {
+			return incomeI > incomeJ // по убыванию дохода
+		}
+		// если доход равен, сортируем по должности по убыванию
+		return positionRank[c.Workers[i].Position] > positionRank[c.Workers[j].Position]
+	})
+
+	var result []string
+	for _, w := range c.Workers {
+		income := w.Salary * w.Experience
+		result = append(result, fmt.Sprintf("%s — %d — %s", w.Name, income, w.Position))
+		return result, nil
+	}
+
+}
+
+// type Interface interface {
+// 	Len() int
+// 	Less(i, j int) bool
+// 	Swap(i, j int)
 // }
 
-// var tests = []Test{
-// 	{[208 159 209 128 208 184 208 178 208 181 209 130], 12, nil},
-// 	{"Привет", 0, ErrInvalidUTF8},
+// func (w Worker) Len() int {
+// 	return len(w.Names)
 // }
 
-// func TestGetUTFLength(t *testing.T) {
-// 	for i, test := range tests {
+// func (w Worker) Swap(i, j int) {
+// 	w.Names[i], w.Names[j] = w.Names[j], w.Names[i]
+// 	w.Salaries[i], w.Salaries[j] = w.Salaries[j], w.Salaries[i]
+// 	w.Positions[i], w.Positions[j] = w.Positions[j], w.Positions[i]
+// }
 
-// 		if GetUTFLength(in) != test.outOne {
-// 			t.Errorf("#%d: Size(%d)=%s; want %s", i, test.in, size, test.out)
-// 		}
-// 	}
+// func (w Worker) Less(i, j int) bool {
+// 	return w.Salaries[i] < w.Salaries[j]
 // }
